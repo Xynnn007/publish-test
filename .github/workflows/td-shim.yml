@@ -1,0 +1,76 @@
+name: Release TD-shim
+on: create
+
+env:
+  RUST_TOOLCHAIN: nightly-2022-11-15
+  TOOLCHAIN_PROFILE: minimal
+
+jobs:
+  release:
+    if: github.event_name == 'create' && github.event.ref_type== 'tag'
+    name: Release
+    runs-on: ubuntu-20.04
+    timeout-minutes: 30
+
+    steps:
+      - name: install NASM
+        uses: ilammy/setup-nasm@v1
+
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v1
+        with:
+          version: "10.0"
+          directory: ${{ runner.temp }}/llvm
+
+      - name: Checkout sources
+        uses: actions/checkout@v2
+        with:
+          repository: 'https://github.com/confidential-containers/td-shim.git'
+          ref: ${{ github.ref_name }}
+          submodules: recursive
+
+      - name: Install toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: ${{ env.TOOLCHAIN_PROFILE }}
+          toolchain: ${{ env.RUST_TOOLCHAIN }}
+          override: true
+          components: rust-src
+
+      - name: Cache
+        uses: Swatinem/rust-cache@v1
+
+      - name: Run cargo install cargo-xbuild
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-xbuild
+
+      - name: Preparation Work
+        run: make preparation
+
+      - name: Generate artifacts
+        run: |
+          bash sh_script/build_final.sh boot_kernel
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: true
+
+      - name: Upload final-boot-kernel.bin
+        id: upload_release_final_boot_kernel_bin
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: target/release/final-boot-kernel.bin
+          asset_name: final-boot-kernel.bin
+          asset_content_type: application/octet-stream
