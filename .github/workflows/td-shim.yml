@@ -51,7 +51,8 @@ jobs:
 
       - name: Generate artifacts
         run: |
-          bash sh_script/build_final.sh boot_kernel
+          bash sh_script/preparation.sh
+          cargo image --release -o target/release/final-boot-kernel.bin
 
       - name: Create Release
         id: create_release
