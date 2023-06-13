@@ -25,7 +25,7 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v2
         with:
-          repository: 'https://github.com/confidential-containers/td-shim.git'
+          repository: 'confidential-containers/td-shim'
           ref: ${{ github.ref_name }}
           submodules: recursive
 
