@@ -52,6 +52,11 @@ jobs:
       - name: Generate artifacts
         run: |
           bash sh_script/preparation.sh
+          export CC_x86_64_unknown_none=clang
+          export AR_x86_64_unknown_none=llvm-ar
+          export CC=clang
+          export AR=llvm-ar
+          export AS=nasm
           cargo image --release -o target/release/final-boot-kernel.bin
 
       - name: Create Release
