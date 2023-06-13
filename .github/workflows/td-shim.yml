@@ -51,7 +51,9 @@ jobs:
 
       - name: Generate artifacts
         run: |
-          bash sh_script/build_final.sh boot_kernel
+          ls
+          ls sh_script
+          ./sh_script/build_final.sh boot_kernel
 
       - name: Create Release
         id: create_release
